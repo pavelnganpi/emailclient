@@ -1,23 +1,61 @@
 import request from 'supertest';
+import { HTTP_STATUS, ERROR_MESSAGES } from '../src/constants';
 import app from '../src/app.js';
 
 describe('GET /', () => {
   it('should render properly', async () => {
-    await request(app).get('/').expect(200);
+    await request(app).get('/').expect(HTTP_STATUS.OK);
   });
 });
 
-describe('GET /list', () => {
-  it('should render properly with valid parameters', async () => {
+describe('POST /email', () => {
+  it('should return bad request for subject field missing', async () => {
     await request(app)
-      .get('/list')
-      .query({ title: 'List title' })
-      .expect(200);
+      .post('/email')
+			.expect(HTTP_STATUS.BAD_REQUEST, {
+				status: HTTP_STATUS.BAD_REQUEST,
+				message: ERROR_MESSAGES.SUBJECT_MISSING
+			});
   });
 
-  it('should error without a valid parameter', async () => {
-    await request(app).get('/list').expect(500);
-  });
+	it('should return bad request for body field missing', async () => {
+		await request(app)
+			.post('/email')
+			.send({
+				'subject': 'subject',
+			})
+			.expect(HTTP_STATUS.BAD_REQUEST, {
+				status: HTTP_STATUS.BAD_REQUEST,
+				message: ERROR_MESSAGES.BODY_MISSING
+			});
+	});
+
+	it('should return bad request for to field missing', async () => {
+		await request(app)
+			.post('/email')
+			.send({
+				'subject': 'subject',
+				'body': 'body',
+
+			})
+			.expect(HTTP_STATUS.BAD_REQUEST, {
+				status: HTTP_STATUS.BAD_REQUEST,
+				message: ERROR_MESSAGES.TO_MISSING
+			});
+	});
+
+	it('should successfully send email', async () => {
+		await request(app)
+			.post('/email')
+			.send({
+				'subject': 'subject',
+				'body': 'body',
+				'to': 'test@email.com'
+			})
+			.expect(HTTP_STATUS.CREATED, {
+				message: 'success',
+			});
+	});
 });
 
 describe('GET /404', () => {

@@ -18,7 +18,7 @@ routes.post('/email', (req, res) => {
   // error checking
 	const valResult = validateSendEmailReqBody(req.body, res);
 	if (valResult.status === HTTP_STATUS.BAD_REQUEST) {
-		return res.status(valResult.status).json({ message: valResult.message });
+		return res.status(valResult.status).json(valResult);
 	}
 	const { to, subject, body } = req.body;
 	const msg = {
