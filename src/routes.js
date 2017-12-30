@@ -1,26 +1,36 @@
 import { Router } from 'express';
+import { SG_MAIL, validateSendEmailReqBody } from './util';
+import { HTTP_STATUS } from './constants';
 const routes = Router();
 
 /**
  * GET home page
  */
 routes.get('/', (req, res) => {
-  res.status(200).json({message: " welcome email client apis"})
+	res.status(200).json({message: " welcome to email client APIs"});
 });
 
-routes.get('/list', (req, res, next) => {
-  const { title } = req.query;
+/**
+ * Send email
+ */
+routes.post('/email', (req, res) => {
 
-  if (title == null || title === '') {
-    // You probably want to set the response HTTP status to 400 Bad Request
-    // or 422 Unprocessable Entity instead of the default 500 of
-    // the global error handler (e.g check out https://github.com/kbariotis/throw.js).
-    // This is just for demo purposes.
-    next(new Error('The "title" parameter is required'));
-    return;
-  }
+  // error checking
+	const valResult = validateSendEmailReqBody(req.body, res);
+	if (valResult.status === HTTP_STATUS.BAD_REQUEST) {
+		return res.status(valResult.status).json({ message: valResult.message });
+	}
+	const { to, subject, body } = req.body;
+	const msg = {
+		from: 'paveynganpi@emailapi.com',
+		to,
+		subject,
+		text: body,
+	};
 
-  res.render('index', { title });
+	SG_MAIL.send(msg, () => {
+		return res.status(HTTP_STATUS.CREATED).json({ message: 'success' });
+	});
 });
 
 export default routes;
